@@ -40,7 +40,6 @@ import com.android.ide.eclipse.adt.io.IFolderWrapper;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkConstants;
-import com.android.sdklib.internal.build.BuildConfigGenerator;
 import com.android.sdklib.xml.AndroidManifest;
 import com.android.sdklib.xml.ManifestData;
 
@@ -86,8 +85,6 @@ public class PreCompilerBuilder extends BaseBuilder {
 
     private static final String PROPERTY_PACKAGE = "manifestPackage"; //$NON-NLS-1$
     private static final String PROPERTY_COMPILE_RESOURCES = "compileResources"; //$NON-NLS-1$
-    private static final String PROPERTY_COMPILE_BUILDCONFIG = "createBuildConfig"; //$NON-NLS-1$
-    private static final String PROPERTY_BUILDCONFIG_MODE = "buildConfigMode"; //$NON-NLS-1$
 
     /**
      * Resource Compile flag. This flag is reset to false after each successful compilation, and
@@ -95,8 +92,6 @@ public class PreCompilerBuilder extends BaseBuilder {
      * when the project is closed/opened.
      */
     private boolean mMustCompileResources = false;
-    private boolean mMustCreateBuildConfig = false;
-    private boolean mLastBuildConfigMode;
 
     private final List<SourceProcessor> mProcessors = new ArrayList<SourceProcessor>();
 
@@ -252,7 +247,6 @@ public class PreCompilerBuilder extends BaseBuilder {
                 doClean(project, monitor);
 
                 mMustCompileResources = true;
-                mMustCreateBuildConfig = true;
 
                 for (SourceProcessor processor : mProcessors) {
                     processor.prepareFullBuild(project);
@@ -321,7 +315,7 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // store the build status in the persistent storage
             saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, mMustCompileResources);
-            saveProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, mMustCreateBuildConfig);
+//            saveProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, mMustCreateBuildConfig);
 
             // if there was some XML errors, we just return w/o doing
             // anything since we've put some markers in the files anyway.
@@ -503,21 +497,11 @@ public class PreCompilerBuilder extends BaseBuilder {
                 // force a clean
                 doClean(project, monitor);
                 mMustCompileResources = true;
-                mMustCreateBuildConfig = true;
                 for (SourceProcessor processor : mProcessors) {
                     processor.prepareFullBuild(project);
                 }
 
                 saveProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, mMustCompileResources);
-                saveProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, mMustCreateBuildConfig);
-            }
-
-            try {
-                handleBuildConfig(args);
-            } catch (IOException e) {
-                AdtPlugin.log(e, "Failed to create BuildConfig class for project %s",
-                        getProject().getName());
-                return result;
             }
 
             // run the source processors
@@ -616,15 +600,6 @@ public class PreCompilerBuilder extends BaseBuilder {
 
             // Load the current compile flags. We ask for true if not found to force a recompile.
             mMustCompileResources = loadProjectBooleanProperty(PROPERTY_COMPILE_RESOURCES, true);
-            mMustCreateBuildConfig = loadProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, true);
-            Boolean v = ProjectHelper.loadBooleanProperty(project, PROPERTY_BUILDCONFIG_MODE);
-            if (v == null) {
-                // no previous build config mode? force regenerate
-                mMustCreateBuildConfig = true;
-            } else {
-                mLastBuildConfigMode = v;
-            }
-
 
             IJavaProject javaProject = JavaCore.create(project);
 
@@ -636,41 +611,6 @@ public class PreCompilerBuilder extends BaseBuilder {
             mProcessors.add(renderScriptProcessor);
         } catch (Throwable throwable) {
             AdtPlugin.log(throwable, "Failed to finish PrecompilerBuilder#startupOnInitialize()");
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void handleBuildConfig(Map args) throws IOException, CoreException {
-        boolean debugMode = !args.containsKey(RELEASE_REQUESTED);
-
-        BuildConfigGenerator generator = new BuildConfigGenerator(
-                mGenFolder.getLocation().toOSString(), mManifestPackage, debugMode);
-
-        if (mMustCreateBuildConfig == false) {
-            // check the file is present.
-            IFolder folder = getGenManifestPackageFolder();
-            if (folder.exists(new Path(BuildConfigGenerator.BUILD_CONFIG_NAME)) == false) {
-                mMustCreateBuildConfig = true;
-                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, getProject(),
-                        String.format("Class %1$s is missing!",
-                                BuildConfigGenerator.BUILD_CONFIG_NAME));
-            } else if (debugMode != mLastBuildConfigMode) {
-                // else if the build mode changed, force creation
-                mMustCreateBuildConfig = true;
-                AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, getProject(),
-                        String.format("Different build mode, must update %1$s!",
-                                BuildConfigGenerator.BUILD_CONFIG_NAME));
-            }
-        }
-
-        if (mMustCreateBuildConfig) {
-            AdtPlugin.printBuildToConsole(BuildVerbosity.VERBOSE, getProject(),
-                    String.format("Generating %1$s...", BuildConfigGenerator.BUILD_CONFIG_NAME));
-            generator.generate();
-
-            mMustCreateBuildConfig = false;
-            saveProjectBooleanProperty(PROPERTY_COMPILE_BUILDCONFIG, mMustCreateBuildConfig);
-            saveProjectBooleanProperty(PROPERTY_BUILDCONFIG_MODE, mLastBuildConfigMode = debugMode);
         }
     }
 

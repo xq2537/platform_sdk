@@ -81,10 +81,6 @@
             classname="com.android.ant.RenderScriptTask"
             classpathref="android.antlibs" />
 
-    <taskdef name="buildconfig"
-            classname="com.android.ant.BuildConfigTask"
-            classpathref="android.antlibs" />
-
     <taskdef name="dex"
             classname="com.android.ant.DexExecTask"
             classpathref="android.antlibs" />
@@ -528,39 +524,19 @@
             <path refid="project.libraries.jars" />
         </path>
 
-        <!-- If the "debug" build type changed, clear out the compiled code.
-             This is to make sure the new BuildConfig.DEBUG value is picked up
-             as javac can't deal with this type of change in its dependency computation. -->
+        <!-- special case for instrumented: if the previous build was
+             instrumented but not this one, clear out the compiled code -->
         <if>
             <condition>
                 <and>
-                    <length string="${build.last.is.packaging.debug}" trim="true" when="greater" length="0" />
-                    <not><equals
-                            arg1="${build.is.packaging.debug}"
-                            arg2="${build.last.is.packaging.debug}" /></not>
+                    <istrue value="${build.last.is.instrumented}" />
+                    <isfalse value="${build.is.instrumented}" />
                 </and>
             </condition>
             <then>
-                <echo>Switching between debug and non debug build: Deleting previous compilation output...</echo>
+                <echo>Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
                 <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
             </then>
-            <else>
-                <!-- Else, we may still need to clean the code, for another reason.
-                     special case for instrumented: if the previous build was
-                     instrumented but not this one, clear out the compiled code -->
-                <if>
-                    <condition>
-                        <and>
-                            <istrue value="${build.last.is.instrumented}" />
-                            <isfalse value="${build.is.instrumented}" />
-                        </and>
-                    </condition>
-                    <then>
-                        <echo>Switching from instrumented to non-instrumented build: Deleting previous compilation output...</echo>
-                        <delete dir="${out.classes.absolute.dir}" verbose="${verbose}" />
-                    </then>
-                </if>
-            </else>
         </if>
 
         <echo>Creating output directories if needed...</echo>
@@ -614,17 +590,6 @@
                 <res path="${out.res.absolute.dir}" />
                 <res path="${resource.absolute.dir}" />
             </aapt>
-
-            <echo>----------</echo>
-            <echo>Handling BuildConfig class...</echo>
-            <xpath input="AndroidManifest.xml" expression="/manifest/@package"
-                    output="manifest.package" />
-            <buildconfig
-                    genFolder="${gen.absolute.dir}"
-                    package="${manifest.package}"
-                    buildType="${build.is.packaging.debug}"
-                    previousBuildType="${build.last.is.packaging.debug}"/>
-
         </do-only-if-manifest-hasCode>
     </target>
 
