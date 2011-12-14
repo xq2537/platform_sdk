@@ -53,6 +53,7 @@ public class LintConstants {
     public static final String SCROLL_VIEW = "ScrollView";             //$NON-NLS-1$
     public static final String GALLERY = "Gallery";                    //$NON-NLS-1$
     public static final String GRID_VIEW = "GridView";                 //$NON-NLS-1$
+    public static final String RADIO_GROUP = "RadioGroup";             //$NON-NLS-1$
     public static final String EDIT_TEXT = "EditText";                 //$NON-NLS-1$
     public static final String LIST_VIEW = "ListView";                 //$NON-NLS-1$
     public static final String TEXT_VIEW = "TextView";                 //$NON-NLS-1$
