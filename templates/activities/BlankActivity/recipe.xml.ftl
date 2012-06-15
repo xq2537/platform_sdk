@@ -13,12 +13,6 @@
     <merge from="res/values-large/dimens.xml" />
     <merge from="res/values/strings.xml.ftl" />
 
-    <!-- Decide whether or not to add the support library -->
-    <#if navType != "none">
-        <copy from="${android.templatesRes}/android-support-v4.jar.bin"
-                to="libs/android-support-v4.jar" />
-    </#if>
-
     <!-- Decide what kind of layout to add (viewpager or not) -->
     <#if navType?contains("pager")>
         <instantiate from="res/layout/activity_pager.xml.ftl"

@@ -17,7 +17,9 @@ package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_FTL;
 import static com.android.ide.eclipse.adt.AdtConstants.DOT_XML;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.InstallDependencyPage.SUPPORT_LIBRARY_NAME;
 import static com.android.sdklib.SdkConstants.FD_EXTRAS;
+import static com.android.sdklib.SdkConstants.FD_NATIVE_LIBS;
 import static com.android.sdklib.SdkConstants.FD_TEMPLATES;
 import static com.android.sdklib.SdkConstants.FD_TOOLS;
 
@@ -25,6 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
 import com.android.ide.eclipse.adt.AdtUtils;
+import com.android.ide.eclipse.adt.internal.actions.AddCompatibilityJarAction;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatPreferences;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlFormatStyle;
 import com.android.ide.eclipse.adt.internal.editors.formatting.XmlPrettyPrinter;
@@ -35,6 +38,7 @@ import com.android.manifmerger.MergerLog;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.SdkConstants;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import freemarker.cache.TemplateLoader;
@@ -43,9 +47,13 @@ import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -71,13 +79,14 @@ import java.util.Map;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import lombok.ast.libs.org.parboiled.google.collect.Lists;
-
 /**
  * Handler which manages instantiating FreeMarker templates, copying resources
  * and merging into existing files
  */
 class TemplateHandler {
+    /** Highest supported format; templates with a higher number will be skipped */
+    static final int CURRENT_FORMAT = 1;
+
     /**
      * Special marker indicating that this path refers to the special shared
      * resource directory rather than being somewhere inside the root/ directory
@@ -113,6 +122,9 @@ class TemplateHandler {
     static final String TAG_OPEN = "open";               //$NON-NLS-1$
     static final String TAG_THUMB = "thumb";             //$NON-NLS-1$
     static final String TAG_THUMBS = "thumbs";           //$NON-NLS-1$
+    static final String TAG_DEPENDENCY = "dependency";   //$NON-NLS-1$
+    static final String ATTR_FORMAT = "format";          //$NON-NLS-1$
+    static final String ATTR_REVISION = "revision";      //$NON-NLS-1$
     static final String ATTR_VALUE = "value";            //$NON-NLS-1$
     static final String ATTR_DEFAULT = "default";        //$NON-NLS-1$
     static final String ATTR_SUGGEST = "suggest";        //$NON-NLS-1$
@@ -425,9 +437,25 @@ class TemplateHandler {
                         if (path != null) {
                             execute(freemarker, path, paramMap, outputPath);
                         }
+                    } else if (TAG_DEPENDENCY.equals(name)) {
+                        String dependencyName = attributes.getValue(ATTR_NAME);
+                        if (dependencyName.equals(SUPPORT_LIBRARY_NAME)) {
+                            // We assume the revision requirement has been satisfied
+                            // by the wizard
+                            File path = AddCompatibilityJarAction.getCompatJarFile();
+                            if (path != null) {
+                                File to = new File(outputPath, FD_NATIVE_LIBS
+                                        + File.separator + path.getName());
+                                try {
+                                    copy(path, to);
+                                } catch (IOException ioe) {
+                                    AdtPlugin.log(ioe, null);
+                                }
+                            }
+                        }
                     } else if (!name.equals("template") && !name.equals("category")
                             && !name.equals("option") && !name.equals(TAG_THUMBS) &&
-                            !name.equals(TAG_THUMB)) {
+                            !name.equals(TAG_THUMB) && !name.equals(TAG_DEPENDENCY)) {
                         System.err.println("WARNING: Unknown template directive " + name);
                     }
                 }
@@ -936,7 +964,8 @@ class TemplateHandler {
         }
     }
 
-    /** Returns all the templates with the given prefix
+    /**
+     * Returns all the templates with the given prefix
      *
      * @param folder the folder prefix
      * @return the available templates
@@ -966,5 +995,27 @@ class TemplateHandler {
         }
 
         return templates;
+    }
+
+    /**
+     * Validates this template to make sure it's supported
+     *
+     * @return a status object with the error, or null if there is no problem
+     */
+    @SuppressWarnings("cast") // In Eclipse 3.6.2 cast below is needed
+    @Nullable
+    public IStatus validateTemplate() {
+        TemplateMetadata template = getTemplate();
+        if (template != null && !template.isSupported()) {
+            String versionString = (String) AdtPlugin.getDefault().getBundle().getHeaders().get(
+                    Constants.BUNDLE_VERSION);
+            Version version = new Version(versionString);
+            return new Status(IStatus.ERROR, AdtPlugin.PLUGIN_ID,
+                String.format("This template requires a more recent version of the " +
+                        "Android Eclipse plugin. Please update from version %1$d.%2$d.%3$d.",
+                        version.getMajor(), version.getMinor(), version.getMicro()));
+        }
+
+        return null;
     }
 }

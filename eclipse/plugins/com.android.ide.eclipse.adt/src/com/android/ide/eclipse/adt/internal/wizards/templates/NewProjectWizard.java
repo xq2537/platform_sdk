@@ -75,9 +75,9 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private IWorkbench mWorkbench;
     private UpdateToolsPage mUpdatePage;
     private NewProjectPage mMainPage;
-    private AppSkeletonPage mAppSkeletonPage;
-    private NewTemplatePage mTemplatePage;
     private ActivityPage mActivityPage;
+    private NewTemplatePage mTemplatePage;
+    protected InstallDependencyPage mDependencyPage;
     private ConfigureAssetSetPage mIconPage;
     private NewProjectWizardState mValues;
 
@@ -95,7 +95,6 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
         mValues = new NewProjectWizardState();
         mMainPage = new NewProjectPage(mValues);
-        mAppSkeletonPage = new AppSkeletonPage(mValues);
         mActivityPage = new ActivityPage(mValues);
     }
 
@@ -109,7 +108,6 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         }
 
         addPage(mMainPage);
-        addPage(mAppSkeletonPage);
         addPage(mActivityPage);
     }
 
@@ -123,11 +121,32 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
     @Override
     public IWizardPage getNextPage(IWizardPage page) {
-        // If you turn off creating an application, only one page
         if (page == mMainPage) {
-            if (!mValues.createAppSkeleton) {
-                return null;
+            if (mValues.createIcon) {
+                if (mIconPage == null) {
+                    // Bundle asset studio wizard to create the launcher icon
+                    CreateAssetSetWizardState iconState = mValues.iconState;
+                    iconState.type = AssetType.LAUNCHER;
+                    iconState.outputName = "ic_launcher"; //$NON-NLS-1$
+                    iconState.background = new RGB(0xff, 0xff, 0xff);
+                    iconState.foreground = new RGB(0x33, 0xb6, 0xea);
+                    iconState.shape = GraphicGenerator.Shape.CIRCLE;
+                    iconState.trim = true;
+                    iconState.padding = 10;
+                    iconState.sourceType = CreateAssetSetWizardState.SourceType.CLIPART;
+                    iconState.clipartName = "user.png"; //$NON-NLS-1$
+                    mIconPage = new ConfigureAssetSetPage(iconState);
+                    mIconPage.setTitle("Configure Launcher Icon");
+                    addPage(mIconPage);
+                }
+                return mIconPage;
+            } else {
+                return mActivityPage;
             }
+        }
+
+        if (page == mIconPage) {
+            return mActivityPage;
         }
 
         if (page == mActivityPage && mValues.createActivity) {
@@ -154,28 +173,22 @@ public class NewProjectWizard extends Wizard implements INewWizard {
             return mTemplatePage;
         }
 
-        if (page == mTemplatePage || !mValues.createActivity && page == mActivityPage) {
-            if (mValues.createIcon) {
-                if (mIconPage == null) {
-                    // Bundle asset studio wizard to create the launcher icon
-                    CreateAssetSetWizardState iconState = mValues.iconState;
-                    iconState.type = AssetType.LAUNCHER;
-                    iconState.outputName = "ic_launcher"; //$NON-NLS-1$
-                    iconState.background = new RGB(0xff, 0xff, 0xff);
-                    iconState.foreground = new RGB(0x33, 0xb6, 0xea);
-                    iconState.shape = GraphicGenerator.Shape.CIRCLE;
-                    iconState.trim = true;
-                    iconState.padding = 10;
-                    iconState.sourceType = CreateAssetSetWizardState.SourceType.CLIPART;
-                    iconState.clipartName = "user.png"; //$NON-NLS-1$
-                    mIconPage = new ConfigureAssetSetPage(iconState);
-                    mIconPage.setTitle("Configure Launcher Icon");
-                    addPage(mIconPage);
+        if (page == mTemplatePage) {
+            TemplateMetadata template = mValues.activityValues.getTemplateHandler().getTemplate();
+            if (template != null
+                    && !InstallDependencyPage.isInstalled(template.getDependencies())) {
+                if (mDependencyPage == null) {
+                    mDependencyPage = new InstallDependencyPage();
+                    addPage(mDependencyPage);
                 }
-                return mIconPage;
-            } else {
-                return null;
+                mDependencyPage.setTemplate(template);
+                return mDependencyPage;
             }
+        }
+
+        if (page == mTemplatePage || !mValues.createActivity && page == mActivityPage
+                || page == mDependencyPage) {
+            return null;
         }
 
         return super.getNextPage(page);
@@ -183,10 +196,6 @@ public class NewProjectWizard extends Wizard implements INewWizard {
 
     @Override
     public boolean canFinish() {
-        if (!mValues.createAppSkeleton) {
-            return mMainPage.isPageComplete();
-        }
-
         // Deal with lazy creation of some pages: these may not be in the page-list yet
         // since they are constructed lazily, so consider that option here.
         if (mValues.createIcon && (mIconPage == null || !mIconPage.isPageComplete())) {
@@ -261,20 +270,19 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                     File outputPath = AdtUtils.getAbsolutePath(newProject).toFile();
                     template.render(outputPath, paramMap);
 
-                    if (mValues.createAppSkeleton) {
-                        if (mValues.createIcon) {
-                            generateIcons(newProject);
-                        }
+                    if (mValues.createIcon) {
+                        generateIcons(newProject);
+                    }
 
-                        if (mValues.createActivity) {
-                            generateActivity(template, paramMap, outputPath);
-                        }
+                    if (mValues.createActivity) {
+                        generateActivity(template, paramMap, outputPath);
                     }
                 }
             };
 
             IProgressMonitor monitor = new NullProgressMonitor();
-            NewProjectCreator.create(monitor, newProject, mValues.target, projectPopulator);
+            NewProjectCreator.create(monitor, newProject, mValues.target, projectPopulator,
+                    mValues.isLibrary);
 
             try {
                 newProject.refreshLocal(DEPTH_INFINITE, new NullProgressMonitor());

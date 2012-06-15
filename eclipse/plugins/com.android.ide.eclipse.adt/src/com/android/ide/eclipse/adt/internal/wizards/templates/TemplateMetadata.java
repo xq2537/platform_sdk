@@ -16,6 +16,7 @@
 package com.android.ide.eclipse.adt.internal.wizards.templates;
 
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_DESCRIPTION;
+import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_FORMAT;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.ATTR_NAME;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_PARAMETER;
 import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHandler.TAG_THUMB;
@@ -23,6 +24,7 @@ import static com.android.ide.eclipse.adt.internal.wizards.templates.TemplateHan
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.eclipse.adt.AdtPlugin;
+import com.android.util.Pair;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -32,15 +34,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import lombok.ast.libs.org.parboiled.google.collect.Lists;
 
 /** An ADT template along with metadata */
 class TemplateMetadata {
     private final Document mDocument;
     private final List<Parameter> mParameters;
     private final Map<String, Parameter> mParameterMap;
+    private List<Pair<String, Integer>> mDependencies;
 
     TemplateMetadata(@NonNull Document document) {
         mDocument = document;
@@ -56,6 +62,21 @@ class TemplateMetadata {
                 mParameterMap.put(parameter.id, parameter);
             }
         }
+    }
+
+    boolean isSupported() {
+        String versionString = mDocument.getDocumentElement().getAttribute(ATTR_FORMAT);
+        if (versionString != null && !versionString.isEmpty()) {
+            try {
+                int version = Integer.parseInt(versionString);
+                return version <= TemplateHandler.CURRENT_FORMAT;
+            } catch (NumberFormatException nufe) {
+                return false;
+            }
+        }
+
+        // Older templates without version specified: supported
+        return true;
     }
 
     @Nullable
@@ -135,6 +156,34 @@ class TemplateMetadata {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the dependencies (as a list of pairs of names and revisions)
+     * required by this template
+     */
+    List<Pair<String, Integer>> getDependencies() {
+        if (mDependencies == null) {
+            NodeList elements = mDocument.getElementsByTagName(TemplateHandler.TAG_DEPENDENCY);
+            if (elements.getLength() == 0) {
+                return Collections.emptyList();
+            }
+
+            List<Pair<String, Integer>> dependencies = Lists.newArrayList();
+            for (int i = 0, n = elements.getLength(); i < n; i++) {
+                Element element = (Element) elements.item(i);
+                String name = element.getAttribute(TemplateHandler.ATTR_NAME);
+                int revision = -1;
+                String revisionString = element.getAttribute(TemplateHandler.ATTR_REVISION);
+                if (!revisionString.isEmpty()) {
+                    revision = Integer.parseInt(revisionString);
+                }
+                dependencies.add(Pair.of(name, revision));
+            }
+            mDependencies = dependencies;
+        }
+
+        return mDependencies;
     }
 
     /** Returns the list of available parameters */
