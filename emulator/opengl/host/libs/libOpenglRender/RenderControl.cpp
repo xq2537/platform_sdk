@@ -123,6 +123,8 @@ static EGLint rcChooseConfig(EGLint *attribs, uint32_t attribs_size, uint32_t *c
     return FBConfig::chooseConfig(fb, attribs, configs, configs_size);
 }
 
+int gDPI = 160;
+
 static EGLint rcGetFBParam(EGLint param)
 {
     FrameBuffer *fb = FrameBuffer::getFB();
@@ -153,6 +155,9 @@ static EGLint rcGetFBParam(EGLint param)
             break;
         case FB_MAX_SWAP_INTERVAL:
             ret = 1; // XXX: should be implemented
+            break;
+        case FB_DPI: 
+            ret = gDPI;
             break;
         default:
             break;
@@ -330,6 +335,11 @@ static int rcUpdateColorBuffer(uint32_t colorBuffer,
     return 0;
 }
 
+static void rcSetOrientation(uint32_t orientation)
+{
+    callbackRotation((float)orientation);
+}
+
 void initRenderControlContext(renderControl_decoder_context_t *dec)
 {
     dec->set_rcGetRendererVersion(rcGetRendererVersion);
@@ -357,4 +367,5 @@ void initRenderControlContext(renderControl_decoder_context_t *dec)
     dec->set_rcColorBufferCacheFlush(rcColorBufferCacheFlush);
     dec->set_rcReadColorBuffer(rcReadColorBuffer);
     dec->set_rcUpdateColorBuffer(rcUpdateColorBuffer);
+    dec->set_rcSetOrientation(rcSetOrientation);
 }

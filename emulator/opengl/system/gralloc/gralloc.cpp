@@ -1,5 +1,4 @@
-/*
-* Copyright (C) 2011 The Android Open Source Project
+/* Copyright (C) 2011 The Android Open Source Project
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -85,6 +84,7 @@ struct gralloc_device_t {
 //
 struct fb_device_t {
     framebuffer_device_t  device;
+    int orientation;
 };
 
 static int map_buffer(cb_handle_t *cb, void **vaddr)
@@ -365,7 +365,9 @@ static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
     fb_device_t *fbdev = (fb_device_t *)dev;
     cb_handle_t *cb = (cb_handle_t *)buffer;
 
+    D("gralloc_fb_post() - begin\n");
     if (!fbdev || !cb_handle_t::validate(cb) || !cb->canBePosted()) {
+        D("gralloc_fb_post() - error 1\n");
         return -EINVAL;
     }
 
@@ -376,6 +378,7 @@ static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
     uint32_t *postCountPtr = (uint32_t *)cb->ashmemBase;
     if (!postCountPtr) {
         // This should not happen
+        D("gralloc_fb_post() - error 2\n");
         return -EINVAL;
     }
     (*postCountPtr)++;
@@ -384,6 +387,7 @@ static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
     rcEnc->rcFBPost(rcEnc, cb->hostHandle);
     hostCon->flush();
 
+    D("gralloc_fb_post() - ends\n");
     return 0;
 }
 
@@ -434,6 +438,45 @@ static int fb_close(struct hw_device_t *dev)
     return 0;
 }
 
+static int fb_manageOrientation(struct framebuffer_device_t* dev, int orientation)
+{
+    fb_device_t *fbdev = (fb_device_t *)dev;
+
+    if (!fbdev) {
+        return -1;
+    }
+
+    // Make sure we have host connection
+    DEFINE_AND_VALIDATE_HOST_CONNECTION;
+
+    ALOGI("setOrientation: orientation=%d\n", orientation);
+
+    if (fbdev->orientation != orientation) {
+        switch (orientation) {
+         case 0:
+            rcEnc->rcSetOrientation(rcEnc, 0);
+            break;
+         case 1:
+            rcEnc->rcSetOrientation(rcEnc, 90);
+            break;
+         case 2:
+            rcEnc->rcSetOrientation(rcEnc, 180);
+            break;
+         case 3:
+            rcEnc->rcSetOrientation(rcEnc, 270);
+            break;
+        }
+        fbdev->orientation = orientation;
+    }
+
+    return 0;
+}
+
+static void fb_setOrientation(struct framebuffer_device_t* dev, int orientation)
+{
+    if (fb_manageOrientation(dev, orientation)<0)
+        ALOGE("Error setting Orientation");
+}
 
 //
 // gralloc module functions - refcount + locking interface
@@ -459,6 +502,7 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
         DEFINE_AND_VALIDATE_HOST_CONNECTION;
         D("Opening host ColorBuffer 0x%x\n", cb->hostHandle);
         rcEnc->rcOpenColorBuffer(rcEnc, cb->hostHandle);
+        D("Opening host ColorBuffer 0x%x - OK\n", cb->hostHandle);
     }
 
     //
@@ -475,6 +519,7 @@ static int gralloc_register_buffer(gralloc_module_t const* module,
         cb->mappedPid = getpid();
     }
 
+    D("gralloc_register_buffer ends\n");
     return 0;
 }
 
@@ -748,6 +793,11 @@ static int gralloc_device_open(const hw_module_t* module,
         D("gralloc: min_swap=%d\n", min_si);
         EGLint max_si = rcEnc->rcGetFBParam(rcEnc, FB_MAX_SWAP_INTERVAL);
         D("gralloc: max_swap=%d\n", max_si);
+        EGLint mDPI = rcEnc->rcGetFBParam(rcEnc, FB_DPI);
+        D("gralloc: DPI=%d\n", mDPI);
+        char set_dpi[128];
+        sprintf(set_dpi, "/system/bin/setdpi %d", mDPI);
+        system(set_dpi);
 
         //
         // Allocate memory for the framebuffer device
@@ -758,6 +808,7 @@ static int gralloc_device_open(const hw_module_t* module,
             return -ENOMEM;
         }
         memset(dev, 0, sizeof(fb_device_t));
+        dev->orientation = 0;
 
         // Initialize our device structure
         //
@@ -769,6 +820,7 @@ static int gralloc_device_open(const hw_module_t* module,
         dev->device.post            = fb_post;
         dev->device.setUpdateRect   = 0; //fb_setUpdateRect;
         dev->device.compositionComplete = fb_compositionComplete; //XXX: this is a dummy
+        dev->device.setOrientation  = fb_setOrientation;
 
         const_cast<uint32_t&>(dev->device.flags) = 0;
         const_cast<uint32_t&>(dev->device.width) = width;
@@ -829,7 +881,7 @@ fallback_init(void)
     char  prop[PROPERTY_VALUE_MAX];
     void* module;
 
-    property_get("ro.kernel.qemu.gles", prop, "0");
+    property_get("androVM.gles", prop, "0");
     if (atoi(prop) > 0) {
         return;
     }

@@ -58,4 +58,9 @@ $(call emugl-export,LDFLAGS,$(host_common_LDFLAGS))
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH)/../include $(EMUGL_PATH)/shared)
 $(call emugl-export,STATIC_LIBRARIES, lib64cutils lib64utils lib64log)
 
+ifeq ($(HOST_OS),windows)
+LOCAL_CC = /usr/bin/amd64-mingw32msvc-gcc 
+LOCAL_CXX = /usr/bin/amd64-mingw32msvc-g++
+endif
+
 $(call emugl-end-module)

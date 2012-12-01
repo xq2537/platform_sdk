@@ -29,6 +29,9 @@
 #include <ws2tcpip.h>
 #endif
 
+#include <cutils/log.h>
+#define LOG_TAG "SocketStream"
+
 SocketStream::SocketStream(size_t bufSize) :
     IOStream(bufSize),
     m_sock(-1),
@@ -121,6 +124,8 @@ const unsigned char *SocketStream::readFully(void *buf, size_t len)
     while (res > 0) {
         ssize_t stat = ::recv(m_sock, (char *)(buf) + len - res, res, 0);
         if (stat > 0) {
+            if (res != stat) 
+                ALOGE("readFully was waiting for %d bytes, got %d \n", res, stat);
             res -= stat;
             continue;
         }

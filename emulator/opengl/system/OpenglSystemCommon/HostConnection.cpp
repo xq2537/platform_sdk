@@ -15,17 +15,19 @@
 */
 #include "HostConnection.h"
 #include "TcpStream.h"
+#include "VMWareStream.h"
 #include "QemuPipeStream.h"
 #include "ThreadInfo.h"
 #include <cutils/log.h>
 #include "GLEncoder.h"
 #include "GL2Encoder.h"
+#include <cutils/properties.h>
 
 #define STREAM_BUFFER_SIZE  4*1024*1024
 #define STREAM_PORT_NUM     22468
 
 /* Set to 1 to use a QEMU pipe, or 0 for a TCP connection */
-#define  USE_QEMU_PIPE  1
+#define  USE_QEMU_PIPE  0
 
 HostConnection::HostConnection() :
     m_stream(NULL),
@@ -77,20 +79,57 @@ HostConnection *HostConnection::get()
         }
         else /* !useQemuPipe */
         {
-            TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
-            if (!stream) {
-                ALOGE("Failed to create TcpStream for host connection!!!\n");
-                delete con;
-                return NULL;
-            }
-
+#if 0
             if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
                 ALOGE("Failed to connect to host (TcpStream)!!!\n");
                 delete stream;
                 delete con;
                 return NULL;
             }
-            con->m_stream = stream;
+#else
+            char androVM_server_prop[PROPERTY_VALUE_MAX];
+            for (;;) {
+                property_get("androVM.server.ip", androVM_server_prop, "");
+                if (strlen(androVM_server_prop)>0)
+                    break;
+                sleep(1);
+            }
+
+            if (strcmp(androVM_server_prop, "vmci")==0) {
+                VMWareStream *stream = new VMWareStream(STREAM_BUFFER_SIZE);
+                if (!stream) {
+                    ALOGE("Failed to create VMWareStream for host connection!!!\n");
+                    delete con;
+                    return NULL;
+                }
+
+                if (stream->connect(androVM_server_prop, STREAM_PORT_NUM) < 0) {
+                    ALOGE("Failed to connect to host (VMWareStream)!!!\n");
+                    delete stream;
+                    delete con;
+                    return NULL;
+                }
+
+                con->m_stream = stream;
+            }
+            else {
+                TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
+                if (!stream) {
+                    ALOGE("Failed to create TcpStream for host connection!!!\n");
+                    delete con;
+                    return NULL;
+                }
+
+                if (stream->connect(androVM_server_prop, STREAM_PORT_NUM) < 0) {
+                    ALOGE("Failed to connect to host (TcpStream)!!!\n");
+                    delete stream;
+                    delete con;
+                    return NULL;
+                }
+
+                con->m_stream = stream;
+            }
+#endif//0
         }
 
         // send zero 'clientFlags' to the host.

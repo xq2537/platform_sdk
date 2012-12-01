@@ -18,7 +18,7 @@ endif
 
 ifeq ($(HOST_OS),windows)
     host_OS_SRCS = EglWindowsApi.cpp
-    host_common_LDLIBS += -lopengl32 -lgdi32
+    host_common_LDLIBS += -lopengl32 -lgdi32 -Wl
 endif
 
 host_common_SRC_FILES :=      \
@@ -52,6 +52,13 @@ $(call emugl-import,lib64GLcommon)
 
 LOCAL_LDLIBS += $(host_common_LDLIBS) -m64
 LOCAL_SRC_FILES := $(host_common_SRC_FILES)
+
+ifeq ($(HOST_OS),windows)
+LOCAL_CC = /usr/bin/amd64-mingw32msvc-gcc 
+LOCAL_CXX = /usr/bin/amd64-mingw32msvc-g++
+LOCAL_LDLIBS += -L/usr/amd64-mingw32msvc/lib -lmsvcrt
+LOCAL_NO_DEFAULT_LD_DIRS = 1
+endif
 
 $(call emugl-end-module)
 

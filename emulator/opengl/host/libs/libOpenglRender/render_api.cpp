@@ -21,6 +21,7 @@
 #include "TimeUtils.h"
 
 #include "TcpStream.h"
+#include "VMWareStream.h"
 #ifdef _WIN32
 #include "Win32PipeStream.h"
 #else
@@ -240,6 +241,23 @@ bool createOpenGLSubwindow(FBNativeWindowType window,
     return false;
 }
 
+static void (* fn_callback_rotation)(float) = NULL;
+
+void setCallbackRotation(void (* fn)(float)) {
+    fn_callback_rotation = fn;
+}
+
+void callbackRotation(float zRot) {
+    if (fn_callback_rotation)
+        (*fn_callback_rotation)(zRot);
+}
+
+extern int gDPI;
+void setDPI(int d) {
+    gDPI = d;
+}
+
+
 bool destroyOpenGLSubwindow()
 {
     if (s_renderThread) {
@@ -303,6 +321,9 @@ IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
 
     if (gRendererStreamMode == STREAM_MODE_TCP) {
         stream = new TcpStream(p_stream_buffer_size);
+    }
+    else if (gRendererStreamMode == STREAM_MODE_VMWARE) {
+        stream = new VMWareStream(p_stream_buffer_size);
     } else {
 #ifdef _WIN32
         stream = new Win32PipeStream(p_stream_buffer_size);
@@ -341,6 +362,9 @@ setStreamMode(int mode)
             break;
 
         case STREAM_MODE_TCP:
+            break;
+
+        case STREAM_MODE_VMWARE:
             break;
 
 #ifndef _WIN32

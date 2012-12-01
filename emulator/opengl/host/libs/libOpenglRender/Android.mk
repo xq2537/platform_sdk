@@ -15,6 +15,7 @@ endif
 
 ifeq ($(HOST_OS),windows)
     host_OS_SRCS = NativeWindowsSubWindow.cpp
+    host_common_LDLIBS += -Wl,--out-implib,--no-undefined,--enable-runtime-pseudo-reloc
 endif
 
 host_common_SRC_FILES := \
@@ -32,7 +33,8 @@ host_common_SRC_FILES := \
     ThreadInfo.cpp \
     RenderThread.cpp \
     ReadBuffer.cpp \
-    RenderServer.cpp
+    RenderServer.cpp \
+    AndroVM.cpp
 
 host_common_CFLAGS :=
 
@@ -78,6 +80,35 @@ LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
 
 LOCAL_STATIC_LIBRARIES += lib64utils lib64log
 
-$(call emugl-export,CFLAGS,$(host_common_CFLAGS) -m64)
+$(call emugl-export,CFLAGS,$(host_commont_CFLAGS) -m64)
+
+ifeq ($(HOST_OS),windows)
+LOCAL_CC = /usr/bin/amd64-mingw32msvc-gcc 
+LOCAL_CXX = /usr/bin/amd64-mingw32msvc-g++
+LOCAL_LDLIBS += -L/usr/amd64-mingw32msvc/lib -lmsvcrt
+LOCAL_NO_DEFAULT_LD_DIRS = 1
+endif
 
 $(call emugl-end-module)
+
+### host libOpenglRenderStatic #################################################
+$(call emugl-begin-host-static-library,libOpenglRenderStatic)
+
+$(call emugl-import,libGLESv1_dec libGLESv2_dec lib_renderControl_dec libOpenglCodecCommon libOpenglOsUtils)
+
+LOCAL_LDLIBS += $(host_common_LDLIBS)
+
+LOCAL_SRC_FILES := $(host_common_SRC_FILES)
+$(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/host/include)
+$(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
+
+# use Translator's egl/gles headers
+LOCAL_C_INCLUDES += $(EMUGL_PATH)/host/libs/Translator/include
+
+LOCAL_STATIC_LIBRARIES += libutils liblog
+
+$(call emugl-export,CFLAGS,$(host_common_CFLAGS))
+
+$(call emugl-end-module)
+
+

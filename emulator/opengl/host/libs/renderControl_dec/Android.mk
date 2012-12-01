@@ -16,4 +16,8 @@ $(call emugl-gen-decoder,$(EMUGL_PATH)/system/renderControl_enc,renderControl)
 # For renderControl_types.h
 $(call emugl-export,C_INCLUDES,$(EMUGL_PATH)/system/renderControl_enc)
 $(call emugl-export,CFLAGS,-m64)
+ifeq ($(HOST_OS),windows)
+LOCAL_CC = /usr/bin/amd64-mingw32msvc-gcc 
+LOCAL_CXX = /usr/bin/amd64-mingw32msvc-g++
+endif
 $(call emugl-end-module)

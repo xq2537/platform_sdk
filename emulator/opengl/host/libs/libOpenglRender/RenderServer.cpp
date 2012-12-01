@@ -15,6 +15,7 @@
 */
 #include "RenderServer.h"
 #include "TcpStream.h"
+#include "VMWareStream.h"
 #ifdef _WIN32
 #include "Win32PipeStream.h"
 #else
@@ -43,6 +44,9 @@ RenderServer *RenderServer::create(int port)
 
     if (gRendererStreamMode == STREAM_MODE_TCP) {
         server->m_listenSock = new TcpStream();
+    } 
+    else if (gRendererStreamMode == STREAM_MODE_VMWARE) {
+        server->m_listenSock = new VMWareStream();
     } else {
 #ifdef _WIN32
         server->m_listenSock = new Win32PipeStream();

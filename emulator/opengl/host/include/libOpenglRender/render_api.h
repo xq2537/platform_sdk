@@ -70,6 +70,7 @@ bool initLibrary(void);
 #define STREAM_MODE_TCP       1
 #define STREAM_MODE_UNIX      2
 #define STREAM_MODE_PIPE      3
+#define STREAM_MODE_VMWARE    4
 
 // Change the stream mode. This must be called before initOpenGLRenderer
 int setStreamMode(int mode);
@@ -114,6 +115,8 @@ bool destroyOpenGLSubwindow();
 //    of degrees around the z axis
 //
 void setOpenGLDisplayRotation(float zRot);
+void setCallbackRotation(void (* fn)(float));
+void callbackRotation(float zRot);
 
 //
 // repaintOpenGLDisplay -
@@ -128,6 +131,8 @@ void repaintOpenGLDisplay();
 //     only if previous initOpenGLRenderer has returned true.
 //
 bool stopOpenGLRenderer();
+
+void setDPI(int);
 
 #ifdef __cplusplus
 }

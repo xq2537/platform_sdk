@@ -9,6 +9,7 @@ commonSources := \
         glUtils.cpp \
         SocketStream.cpp \
         TcpStream.cpp \
+        VMWareStream.cpp \
         TimeUtils.cpp
 
 host_commonSources := $(commonSources)
@@ -50,5 +51,11 @@ LOCAL_SRC_FILES := $(host_commonSources)
 $(call emugl-export,STATIC_LIBRARIES,lib64cutils)
 $(call emugl-export,C_INCLUDES,$(LOCAL_PATH))
 $(call emugl-export,CFLAGS,-m64)
+
+ifeq ($(HOST_OS),windows)
+LOCAL_CC = /usr/bin/amd64-mingw32msvc-gcc 
+LOCAL_CXX = /usr/bin/amd64-mingw32msvc-g++
+endif
+
 $(call emugl-end-module)
 
