@@ -9,7 +9,6 @@ commonSources := \
         glUtils.cpp \
         SocketStream.cpp \
         TcpStream.cpp \
-        VMWareStream.cpp \
         TimeUtils.cpp
 
 host_commonSources := $(commonSources)

@@ -15,7 +15,6 @@
 */
 #include "HostConnection.h"
 #include "TcpStream.h"
-#include "VMWareStream.h"
 #include "QemuPipeStream.h"
 #include "ThreadInfo.h"
 #include <cutils/log.h>
@@ -95,40 +94,21 @@ HostConnection *HostConnection::get()
                 sleep(1);
             }
 
-            if (strcmp(androVM_server_prop, "vmci")==0) {
-                VMWareStream *stream = new VMWareStream(STREAM_BUFFER_SIZE);
-                if (!stream) {
-                    ALOGE("Failed to create VMWareStream for host connection!!!\n");
-                    delete con;
-                    return NULL;
-                }
-
-                if (stream->connect(androVM_server_prop, STREAM_PORT_NUM) < 0) {
-                    ALOGE("Failed to connect to host (VMWareStream)!!!\n");
-                    delete stream;
-                    delete con;
-                    return NULL;
-                }
-
-                con->m_stream = stream;
+            TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
+            if (!stream) {
+                ALOGE("Failed to create TcpStream for host connection!!!\n");
+                delete con;
+                return NULL;
             }
-            else {
-                TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
-                if (!stream) {
-                    ALOGE("Failed to create TcpStream for host connection!!!\n");
-                    delete con;
-                    return NULL;
-                }
 
-                if (stream->connect(androVM_server_prop, STREAM_PORT_NUM) < 0) {
-                    ALOGE("Failed to connect to host (TcpStream)!!!\n");
-                    delete stream;
-                    delete con;
-                    return NULL;
-                }
-
-                con->m_stream = stream;
+            if (stream->connect(androVM_server_prop, STREAM_PORT_NUM) < 0) {
+                ALOGE("Failed to connect to host (TcpStream)!!!\n");
+                delete stream;
+                delete con;
+                return NULL;
             }
+
+            con->m_stream = stream;
 #endif//0
         }
 
