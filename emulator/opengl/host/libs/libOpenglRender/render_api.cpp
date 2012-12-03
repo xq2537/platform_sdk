@@ -21,7 +21,6 @@
 #include "TimeUtils.h"
 
 #include "TcpStream.h"
-#include "VMWareStream.h"
 #ifdef _WIN32
 #include "Win32PipeStream.h"
 #else
@@ -321,9 +320,6 @@ IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
 
     if (gRendererStreamMode == STREAM_MODE_TCP) {
         stream = new TcpStream(p_stream_buffer_size);
-    }
-    else if (gRendererStreamMode == STREAM_MODE_VMWARE) {
-        stream = new VMWareStream(p_stream_buffer_size);
     } else {
 #ifdef _WIN32
         stream = new Win32PipeStream(p_stream_buffer_size);
