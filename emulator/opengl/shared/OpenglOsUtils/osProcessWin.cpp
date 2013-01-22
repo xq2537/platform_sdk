@@ -168,4 +168,9 @@ bool isProcessRunning(int pid)
     return isRunning;
 }
 
+void sleep(int seconds)
+{
+    ::Sleep(seconds*1000);
+}
+
 } // of namespace osUtils

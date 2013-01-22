@@ -78,22 +78,6 @@ HostConnection *HostConnection::get()
         }
         else /* !useQemuPipe */
         {
-#if 0
-            if (stream->connect("10.0.2.2", STREAM_PORT_NUM) < 0) {
-                ALOGE("Failed to connect to host (TcpStream)!!!\n");
-                delete stream;
-                delete con;
-                return NULL;
-            }
-#else
-            char androVM_server_prop[PROPERTY_VALUE_MAX];
-            for (;;) {
-                property_get("androVM.server.ip", androVM_server_prop, "");
-                if (strlen(androVM_server_prop)>0)
-                    break;
-                sleep(1);
-            }
-
             TcpStream *stream = new TcpStream(STREAM_BUFFER_SIZE);
             if (!stream) {
                 ALOGE("Failed to create TcpStream for host connection!!!\n");
@@ -101,7 +85,7 @@ HostConnection *HostConnection::get()
                 return NULL;
             }
 
-            if (stream->connect(androVM_server_prop, STREAM_PORT_NUM) < 0) {
+            if (stream->connect("127.0.0.1", STREAM_PORT_NUM) < 0) {
                 ALOGE("Failed to connect to host (TcpStream)!!!\n");
                 delete stream;
                 delete con;
@@ -109,7 +93,6 @@ HostConnection *HostConnection::get()
             }
 
             con->m_stream = stream;
-#endif//0
         }
 
         // send zero 'clientFlags' to the host.

@@ -27,6 +27,7 @@ public:
 
     bool isExiting() const { return m_exiting; }
 
+    int m_port;
 private:
     RenderServer();
 

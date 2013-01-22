@@ -70,10 +70,11 @@ bool initLibrary(void);
 #define STREAM_MODE_TCP       1
 #define STREAM_MODE_UNIX      2
 #define STREAM_MODE_PIPE      3
-#define STREAM_MODE_VMWARE    4
+#define STREAM_MODE_TCPCLI    4
 
 // Change the stream mode. This must be called before initOpenGLRenderer
 int setStreamMode(int mode);
+int setVMIP(char *ip);
 
 //
 // initOpenGLRenderer - initialize the OpenGL renderer process.

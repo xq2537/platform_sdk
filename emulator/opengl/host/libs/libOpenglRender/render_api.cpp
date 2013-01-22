@@ -313,12 +313,17 @@ void repaintOpenGLDisplay()
 #define  DEFAULT_STREAM_MODE  STREAM_MODE_TCP
 
 int gRendererStreamMode = DEFAULT_STREAM_MODE;
+#define VMIP_LEN 16
+char gRendererVMIP[VMIP_LEN] = "";
 
 IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
 {
     SocketStream*  stream = NULL;
 
     if (gRendererStreamMode == STREAM_MODE_TCP) {
+        stream = new TcpStream(p_stream_buffer_size);
+    }
+    else if (gRendererStreamMode == STREAM_MODE_TCP) {
         stream = new TcpStream(p_stream_buffer_size);
     } else {
 #ifdef _WIN32
@@ -360,7 +365,7 @@ setStreamMode(int mode)
         case STREAM_MODE_TCP:
             break;
 
-        case STREAM_MODE_VMWARE:
+        case STREAM_MODE_TCPCLI:
             break;
 
 #ifndef _WIN32
@@ -375,5 +380,10 @@ setStreamMode(int mode)
             return -1;
     }
     gRendererStreamMode = mode;
+    return 0;
+}
+
+int setVMIP(char *ip) {
+    strncpy(gRendererVMIP, ip, VMIP_LEN);
     return 0;
 }

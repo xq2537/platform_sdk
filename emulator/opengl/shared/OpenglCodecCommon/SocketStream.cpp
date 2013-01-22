@@ -171,3 +171,21 @@ int SocketStream::recv(void *buf, size_t len)
     }
     return res;
 }
+
+bool SocketStream::waitForDatas(int seconds)
+{
+    fd_set fds_read;
+    struct timeval tv;
+    int rsel;
+
+    if (!valid()) return false;
+    FD_ZERO(&fds_read);
+    FD_SET(m_sock, &fds_read);
+    tv.tv_sec = seconds;
+    tv.tv_usec = 0;
+
+    rsel = select(m_sock+1, &fds_read, NULL, NULL, (seconds>0)?&tv:NULL);
+    if (rsel>0)
+        return true;
+    return false;
+}

@@ -11,6 +11,7 @@ extern "C" {
     int AndroVM_RenderServer_Main();
     int AndroVM_RenderServer_start();
     int AndroVM_setStreamMode(int);
+    int AndroVM_setVMIP(char *);
     void AndroVM_setOpenGLDisplayRotation(float);
     bool AndroVM_initOpenGLRenderer(int, int, int, OnPostFn, void*);
     void AndroVM_setCallbackRotation(void (* fn)(float));
@@ -73,6 +74,11 @@ int AndroVM_RenderServer_start()
 int AndroVM_setStreamMode(int m)
 {
     return setStreamMode(m);
+}
+
+int AndroVM_setVMIP(char *ip)
+{
+    return setVMIP(ip);
 }
 
 void AndroVM_setOpenGLDisplayRotation(float zRot)
