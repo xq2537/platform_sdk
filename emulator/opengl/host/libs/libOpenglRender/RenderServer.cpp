@@ -166,7 +166,7 @@ restart_renderserver_main:
                 goto restart_renderserver_main;
                 break;
             }
-            printf("Got command %d\n", tcpcli_command);
+            DBG("Got command %d\n", tcpcli_command);
             switch (tcpcli_command) {
              case TCPCLI_NEW:
               {
