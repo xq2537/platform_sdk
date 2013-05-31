@@ -127,6 +127,10 @@ ColorBuffer::ColorBuffer() :
     // more robust.
     if (strstr((const char*)s_gl.glGetString(GL_RENDERER), "Intel HD Graphics 3000"))
         m_warYInvertBug = true;
+    if (strstr((const char*)s_gl.glGetString(GL_RENDERER), "Intel HD Graphics 4000"))
+        m_warYInvertBug = true;
+    if (strstr((const char*)s_gl.glGetString(GL_RENDERER), "Intel GMA X3100"))
+        m_warYInvertBug = true;
 #endif
 }
 
