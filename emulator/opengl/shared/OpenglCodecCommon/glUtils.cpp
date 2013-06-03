@@ -32,6 +32,7 @@ size_t glSizeof(GLenum type)
         retval = 2;
         break;
     case GL_INT:
+    case GL_UNSIGNED_INT:
     case GL_FLOAT:
     case GL_FIXED:
     case GL_BOOL:
