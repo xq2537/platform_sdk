@@ -819,10 +819,10 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
             // Send framebuffer (without FPS overlay) to callback
             //
             if (m_onPost) {
-                s_gl.glReadPixels(0, 0, m_width, m_height,
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
+                s_gl.glReadPixels(m_x, m_y, m_width, m_height,
+                		GL_BGRA_EXT, GL_UNSIGNED_BYTE, m_fbImage);
                 m_onPost(m_onPostContext, m_width, m_height, -1,
-                        GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
+                		GL_BGRA_EXT, GL_UNSIGNED_BYTE, m_fbImage);
             }
 
             //
@@ -866,3 +866,24 @@ void FrameBuffer::initGLState()
     s_gl.glMatrixMode(GL_MODELVIEW);
     s_gl.glLoadIdentity();
 }
+
+void FrameBuffer::setViewport(int x0, int y0, int width, int height)
+{
+    if (s_theFrameBuffer) {
+
+        s_theFrameBuffer->m_lock.lock();
+
+        if (s_theFrameBuffer->bindSubwin_locked()) {
+
+            s_gl.glViewport(x0, y0, width, height);
+            s_theFrameBuffer->m_x = x0;
+            s_theFrameBuffer->m_y = y0;
+            s_theFrameBuffer->m_width = width;
+            s_theFrameBuffer->m_height =  height;
+            s_theFrameBuffer->unbind_locked();
+        }
+
+        s_theFrameBuffer-> m_lock.unlock();
+    }
+}
+

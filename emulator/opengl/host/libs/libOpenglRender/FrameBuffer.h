@@ -89,6 +89,8 @@ public:
         repost();
     }
 
+    static void setViewport(int x0, int y0, int width, int height);
+
 private:
     FrameBuffer(int p_width, int p_height, OnPostFn onPost, void* onPostContext);
     ~FrameBuffer();

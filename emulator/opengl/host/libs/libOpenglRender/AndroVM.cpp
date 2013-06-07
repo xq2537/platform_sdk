@@ -17,6 +17,8 @@ extern "C" {
     void AndroVM_setCallbackRotation(void (* fn)(float));
     void AndroVM_repaintOpenGLDisplay();
     void AndroVM_setDPI(int);
+    void AndroVM_setViewport(int x0, int y0, int width, int height);
+    float AndroVM_getDisplayRotation();
 }
 
 int AndroVM_initLibrary()
@@ -101,4 +103,9 @@ void AndroVM_repaintOpenGLDisplay() {
 
 void AndroVM_setDPI(int d) {
     setDPI(d);
+}
+
+void AndroVM_setViewport(int x0, int y0, int width, int height)
+{
+    FrameBuffer::setViewport(x0, y0, width, height);
 }
