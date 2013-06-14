@@ -263,7 +263,7 @@ for SRC in $CP_FILES; do
 
     cpfile "$SRC" "$DEST"
   else
-    die "## Unknown source '$ORIG_SRC' to copy in '$DEST'"
+    die "## Unknown source '$ORIG_SRC' ($SRC) to copy in '$DEST'"
   fi
 done
 

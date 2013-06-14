@@ -40,4 +40,10 @@ $(call emugl-begin-host-static-library,lib64OpenglOsUtils)
     LOCAL_SRC_FILES = $(host_common_SRC_FILES)
     $(call emugl-export,LDLIBS,$(host_common_LDLIBS))
     $(call emugl-export,CFLAGS,-m64)
+
+ifeq ($(HOST_OS),windows)
+LOCAL_CC = /usr/bin/amd64-mingw32msvc-gcc 
+LOCAL_CXX = /usr/bin/amd64-mingw32msvc-g++
+endif
+
 $(call emugl-end-module)

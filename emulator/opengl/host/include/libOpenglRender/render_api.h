@@ -55,9 +55,11 @@ DECL(int, initLibrary, (void));
 #define STREAM_MODE_TCP       1
 #define STREAM_MODE_UNIX      2
 #define STREAM_MODE_PIPE      3
+#define STREAM_MODE_TCPCLI    4
 
 /* Change the stream mode. This must be called before initOpenGLRenderer */
 DECL(int, setStreamMode, (int mode));
+DECL(int, setVMIP, (char *ip));
 
 /* initOpenGLRenderer - initialize the OpenGL renderer process.
  *
@@ -75,6 +77,7 @@ DECL(int, setStreamMode, (int mode));
  * to initialize the renderer after initLibrary().
  */
 DECL(int, initOpenGLRenderer, (int width, int height, char* addr, size_t addrLen));
+DECL(int, initOpenGLRendererPort, (int width, int height, int port));
 
 /* getHardwareStrings - describe the GPU hardware and driver.
  *    The underlying GL's vendor/renderer/version strings are returned to the
@@ -152,6 +155,10 @@ DECL(void, repaintOpenGLDisplay, (void));
  *     only if previous initOpenGLRenderer has returned true.
  */
 DECL(int, stopOpenGLRenderer, (void));
+
+DECL(void, setCallbackRotation, (void (* fn)(float)));
+DECL(void, callbackRotation, (float zRot));
+DECL(void, setDPI, (int));
 
 #ifdef __cplusplus
 }

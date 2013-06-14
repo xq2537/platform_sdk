@@ -52,10 +52,11 @@ private:
 };
 
 int ProcessGetPID();
-int ProcessGetTID();
+long ProcessGetTID();
 bool ProcessGetName(char *p_outName, int p_outNameLen);
 int KillProcess(int pid, bool wait);
 bool isProcessRunning(int pid);
+void sleep(int seconds);
 
 } // of namespace osUtils
 

@@ -37,6 +37,8 @@ EGLNativeWindowType createSubWindow(FBNativeWindowType p_window,
                                     EGLNativeDisplayType* display_out,
                                     int x, int y,int width, int height){
     NSWindow *win = (NSWindow *)p_window;
+    //NSView *view = (NSView *)p_window;
+    //NSWindow *win = [view window];
     if (!win) {
         return NULL;
     }

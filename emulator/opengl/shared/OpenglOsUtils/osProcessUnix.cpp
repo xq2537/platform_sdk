@@ -183,6 +183,11 @@ int ProcessGetPID()
     return getpid();
 }
 
+long ProcessGetTID()
+{
+    return pthread_self();
+}
+
 int KillProcess(int pid, bool wait)
 {
     if (pid<1) {
@@ -205,6 +210,11 @@ int KillProcess(int pid, bool wait)
 bool isProcessRunning(int pid)
 {
     return (kill(pid,0) == 0);
+}
+
+void sleep(int seconds)
+{
+    ::sleep(seconds);
 }
 
 } // of namespace osUtils

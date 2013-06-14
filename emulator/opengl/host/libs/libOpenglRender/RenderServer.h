@@ -23,12 +23,14 @@ class RenderServer : public osUtils::Thread
 {
 public:
     static RenderServer *create(char* addr, size_t addrLen);
+    static RenderServer *create(int port);
     virtual ~RenderServer();
 
     virtual int Main();
 
     bool isExiting() const { return m_exiting; }
 
+    int m_port;
 private:
     RenderServer();
 

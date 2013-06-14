@@ -24,7 +24,12 @@ WIN_SDK_TARGETS += \
 	libOpenglRender \
 	libGLES_CM_translator \
 	libGLES_V2_translator \
-	libEGL_translator
+	libEGL_translator \
+	lib64OpenglRender \
+	lib64GLES_CM_translator \
+	lib64GLES_V2_translator \
+	lib64EGL_translator \
+
 endif
 
 # Define the list of tool-dependent modules requisites needed

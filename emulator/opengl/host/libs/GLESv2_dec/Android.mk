@@ -33,4 +33,9 @@ $(call emugl-export,CFLAGS,$(host_common_debug_CFLAGS) -m64)
 
 LOCAL_SRC_FILES := GL2Decoder.cpp
 
+ifeq ($(HOST_OS),windows)
+LOCAL_CC = /usr/bin/amd64-mingw32msvc-gcc 
+LOCAL_CXX = /usr/bin/amd64-mingw32msvc-g++
+endif
+
 $(call emugl-end-module)

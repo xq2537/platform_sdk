@@ -76,6 +76,31 @@ int initLibrary(void)
     return true;
 }
 
+int initOpenGLRendererPort(int width, int height, int port)
+{
+
+    //
+    // Fail if renderer is already initialized
+    //
+    if (s_renderProc || s_renderThread) {
+        return false;
+    }
+
+    bool inited = FrameBuffer::initialize(width, height);
+    if (!inited) {
+        return false;
+    }
+
+    s_renderThread = RenderServer::create(port);
+    if (!s_renderThread) {
+        return false;
+    }
+
+    s_renderThread->start();
+
+    return true;
+}
+
 int initOpenGLRenderer(int width, int height, char* addr, size_t addrLen)
 {
 
@@ -269,6 +294,22 @@ int createOpenGLSubwindow(FBNativeWindowType window,
     return false;
 }
 
+static void (* fn_callback_rotation)(float) = NULL;
+
+void setCallbackRotation(void (* fn)(float)) {
+    fn_callback_rotation = fn;
+}
+
+void callbackRotation(float zRot) {
+    if (fn_callback_rotation)
+        (*fn_callback_rotation)(zRot);
+}
+
+extern int gDPI;
+void setDPI(int d) {
+    gDPI = d;
+}
+
 int destroyOpenGLSubwindow(void)
 {
     if (s_renderThread) {
@@ -325,12 +366,17 @@ void repaintOpenGLDisplay(void)
 #define  DEFAULT_STREAM_MODE  STREAM_MODE_TCP
 
 int gRendererStreamMode = DEFAULT_STREAM_MODE;
+#define VMIP_LEN 16
+char gRendererVMIP[VMIP_LEN] = "";
 
 IOStream *createRenderThread(int p_stream_buffer_size, unsigned int clientFlags)
 {
     SocketStream*  stream = NULL;
 
     if (gRendererStreamMode == STREAM_MODE_TCP) {
+        stream = new TcpStream(p_stream_buffer_size);
+    }
+    else if (gRendererStreamMode == STREAM_MODE_TCP) {
         stream = new TcpStream(p_stream_buffer_size);
     } else {
 #ifdef _WIN32
@@ -372,6 +418,9 @@ setStreamMode(int mode)
         case STREAM_MODE_TCP:
             break;
 
+        case STREAM_MODE_TCPCLI:
+            break;
+
 #ifndef _WIN32
         case STREAM_MODE_UNIX:
             break;
@@ -385,4 +434,9 @@ setStreamMode(int mode)
     }
     gRendererStreamMode = mode;
     return true;
+}
+
+int setVMIP(char *ip) {
+    strncpy(gRendererVMIP, ip, VMIP_LEN);
+    return 0;
 }

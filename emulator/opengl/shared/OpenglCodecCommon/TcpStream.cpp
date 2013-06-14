@@ -102,5 +102,12 @@ int TcpStream::connect(const char* hostname, unsigned short port)
 {
     m_sock = socket_network_client(hostname, port, SOCK_STREAM);
     if (!valid()) return -1;
+#ifdef _WIN32
+    DWORD  flag;
+#else
+    int    flag;
+#endif
+    flag = 1;
+    setsockopt( m_sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag) );
     return 0;
 }

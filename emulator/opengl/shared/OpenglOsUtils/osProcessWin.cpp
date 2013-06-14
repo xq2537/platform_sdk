@@ -111,7 +111,7 @@ int ProcessGetPID()
     return GetCurrentProcessId();
 }
 
-int ProcessGetTID()
+long ProcessGetTID()
 {
     return GetCurrentThreadId();
 }
@@ -166,6 +166,11 @@ bool isProcessRunning(int pid)
         isRunning = (ret == WAIT_TIMEOUT);
     }
     return isRunning;
+}
+
+void sleep(int seconds)
+{
+    ::Sleep(seconds*1000);
 }
 
 } // of namespace osUtils
