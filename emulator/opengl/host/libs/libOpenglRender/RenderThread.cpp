@@ -31,6 +31,12 @@ RenderThread::RenderThread() :
 {
 }
 
+RenderThread::~RenderThread()
+{
+    if (m_stream)
+        delete m_stream;
+}
+
 RenderThread *RenderThread::create(IOStream *p_stream)
 {
     RenderThread *rt = new RenderThread();
