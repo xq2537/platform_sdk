@@ -25,8 +25,6 @@
 #include "osProcess.h"
 #include <set>
 
-#define STREAM_BUFFER_SIZE 4*1024*1024
-
 typedef std::set<RenderThread *> RenderThreadsSet;
 
 RenderServer::RenderServer() :
@@ -88,7 +86,7 @@ restart_renderserver_main:
             fprintf(stderr,"VM IP is not set !\n");
             return 0;
         }
-        tcpcli_main = new TcpStream(STREAM_BUFFER_SIZE);
+        tcpcli_main = new TcpStream();
         if (!tcpcli_main) {
             fprintf(stderr, "Failed to create TcpStream for main host connection!!!\n");
             return 0;
@@ -170,7 +168,7 @@ restart_renderserver_main:
             switch (tcpcli_command) {
              case TCPCLI_NEW:
               {
-                TcpStream *tcp_stream = new TcpStream(STREAM_BUFFER_SIZE);
+                TcpStream *tcp_stream = new TcpStream();
                 if (!tcp_stream) {
 
                     fprintf(stderr, "Failed to create TcpStream for host connection!!!\n");
