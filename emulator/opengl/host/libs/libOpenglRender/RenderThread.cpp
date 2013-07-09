@@ -160,6 +160,12 @@ int RenderThread::Main()
                              EGL_NO_CONTEXT);
     }
 
+    // Close stream
+    if (m_stream) {
+        delete m_stream;
+        m_stream = NULL;
+    }
+
     //
     // flag that this thread has finished execution
     m_finished = true;
