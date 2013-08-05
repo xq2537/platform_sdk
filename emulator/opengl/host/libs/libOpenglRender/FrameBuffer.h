@@ -45,11 +45,11 @@ struct FrameBufferCaps
 
 class FrameBuffer
 {
-public:
+ public:
     static bool initialize(int width, int height, OnPostFn onPost, void* onPostContext);
     static bool setupSubWindow(FBNativeWindowType p_window,
-                                int x, int y,
-                                int width, int height, float zRot);
+                               int x, int y,
+                               int width, int height, float zRot);
     static bool removeSubWindow();
     static void finalize();
     static FrameBuffer *getFB() { return s_theFrameBuffer; }
@@ -67,11 +67,11 @@ public:
     void openColorBuffer(HandleType p_colorbuffer);
     void closeColorBuffer(HandleType p_colorbuffer);
 
-    bool  bindContext(HandleType p_context, HandleType p_drawSurface, HandleType p_readSurface);
-    bool  setWindowSurfaceColorBuffer(HandleType p_surface, HandleType p_colorbuffer);
-    bool  flushWindowSurfaceColorBuffer(HandleType p_surface);
-    bool  bindColorBufferToTexture(HandleType p_colorbuffer);
-    bool  bindColorBufferToRenderbuffer(HandleType p_colorbuffer);
+    bool bindContext(HandleType p_context, HandleType p_drawSurface, HandleType p_readSurface);
+    bool setWindowSurfaceColorBuffer(HandleType p_surface, HandleType p_colorbuffer);
+    bool flushWindowSurfaceColorBuffer(HandleType p_surface);
+    bool bindColorBufferToTexture(HandleType p_colorbuffer);
+    bool bindColorBufferToRenderbuffer(HandleType p_colorbuffer);
     bool updateColorBuffer(HandleType p_colorbuffer,
                            int x, int y, int width, int height,
                            GLenum format, GLenum type, void *pixels);
@@ -84,21 +84,18 @@ public:
     bool bind_locked();
     bool unbind_locked();
 
-    void setDisplayRotation(float zRot) {
-        m_zRot = zRot;
-        repost();
-    }
+    void setDisplayRotation(float zRot);
 
     static void setViewport(int x0, int y0, int width, int height);
 
-private:
+ private:
     FrameBuffer(int p_width, int p_height, OnPostFn onPost, void* onPostContext);
     ~FrameBuffer();
     HandleType genHandle();
     bool bindSubwin_locked();
     void initGLState();
 
-private:
+ private:
     static FrameBuffer *s_theFrameBuffer;
     static HandleType s_nextHandle;
     int m_x;
