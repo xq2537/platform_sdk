@@ -172,7 +172,7 @@ void WindowSurface::blitToColorBuffer()
 
 bool WindowSurface::resizePbuffer(unsigned int p_width, unsigned int p_height)
 {
-    if (m_eglSurface && 
+    if (m_eglSurface &&
         m_pbufWidth == p_width &&
         m_pbufHeight == p_height) {
         // no need to resize
@@ -218,7 +218,7 @@ bool WindowSurface::resizePbuffer(unsigned int p_width, unsigned int p_height)
                                                  m_fbconf->getEGLConfig(),
                                                  pbufAttribs);
     if (m_eglSurface == EGL_NO_SURFACE) {
-        fprintf(stderr, "Renderer error: failed to create/resize pbuffer!!\n");
+        fprintf(stderr, "Renderer error: failed to create/resize pbuffer!\n");
         return false;
     }
 
@@ -226,7 +226,7 @@ bool WindowSurface::resizePbuffer(unsigned int p_width, unsigned int p_height)
     m_pbufHeight = p_height;
 
     if (needRebindContext) {
-        s_egl.eglMakeCurrent(fb->getDisplay(), 
+        s_egl.eglMakeCurrent(fb->getDisplay(),
                      (prevDrawSurf==prevPbuf) ? m_eglSurface : prevDrawSurf,
                      (prevReadSurf==prevPbuf) ? m_eglSurface : prevReadSurf,
                      prevContext);
