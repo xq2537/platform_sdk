@@ -234,8 +234,8 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     };
 
     fb->m_pbufSurface = s_egl.eglCreatePbufferSurface(fb->m_eglDisplay,
-                                                      fb->m_eglConfig,
-                                                      pbufAttribs);
+                                                  fb->m_eglConfig,
+                                                  pbufAttribs);
     if (fb->m_pbufSurface == EGL_NO_SURFACE) {
         printf("Failed to create pbuf surface for FB 0x%x\n", s_egl.eglGetError());
         delete fb;
@@ -267,9 +267,9 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
 
     if (eglExtensions && has_gl_oes_image) {
         fb->m_caps.has_eglimage_texture_2d =
-            strstr(eglExtensions, "EGL_KHR_gl_texture_2D_image") != NULL;
+             strstr(eglExtensions, "EGL_KHR_gl_texture_2D_image") != NULL;
         fb->m_caps.has_eglimage_renderbuffer =
-            strstr(eglExtensions, "EGL_KHR_gl_renderbuffer_image") != NULL;
+             strstr(eglExtensions, "EGL_KHR_gl_renderbuffer_image") != NULL;
     }
     else {
         fb->m_caps.has_eglimage_texture_2d = false;
@@ -338,8 +338,7 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     // Allocate space for the onPost framebuffer image
     //
     if (onPost) {
-        //fb->m_fbImage = (unsigned char*)malloc(4 * width * height);
-        fb->m_fbImage = (unsigned char*)malloc(4 * 2 * 1024 * 1024);
+        fb->m_fbImage = (unsigned char*)malloc(4 * width * height);
         if (!fb->m_fbImage) {
             delete fb;
             return false;
@@ -357,9 +356,7 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
 }
 
 FrameBuffer::FrameBuffer(int p_width, int p_height,
-                         OnPostFn onPost, void* onPostContext) :
-    m_x(0),
-    m_y(0),
+        OnPostFn onPost, void* onPostContext) :
     m_width(p_width),
     m_height(p_height),
     m_eglDisplay(EGL_NO_DISPLAY),
@@ -383,28 +380,14 @@ FrameBuffer::FrameBuffer(int p_width, int p_height,
     m_fpsStats = getenv("SHOW_FPS_STATS") != NULL;
 }
 
-void FrameBuffer::setDisplayRotation(float zRot)
-{
-    int rot = (int)(zRot - m_zRot);
-
-    if (rot == 90 || rot == -90) {
-        int tmp = m_width;
-        m_width = m_height;
-        m_height = tmp;
-    }
-    m_zRot = zRot;
-
-    repost();
-}
-
 FrameBuffer::~FrameBuffer()
 {
     free(m_fbImage);
 }
 
 bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
-                                 int p_x, int p_y,
-                                 int p_width, int p_height, float zRot)
+                                  int p_x, int p_y,
+                                  int p_width, int p_height, float zRot)
 {
     bool success = false;
 
@@ -421,10 +404,10 @@ bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
                 fb->m_nativeWindow = p_window;
 
                 // create EGLSurface from the generated subwindow
-                fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay,
-                                                                fb->m_eglConfig,
-                                                                fb->m_subWin,
-                                                                NULL);
+                fb->m_eglSurface = s_egl.eglCreateWindowSurface(fb->m_eglDisplay, 
+                                                    fb->m_eglConfig,
+                                                    fb->m_subWin,
+                                                    NULL);
 
                 if (fb->m_eglSurface == EGL_NO_SURFACE) {
                     ERR("Failed to create surface\n");
@@ -438,17 +421,13 @@ bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
                     s_gl.glViewport(0, 0, p_width, p_height);
                     fb->m_zRot = zRot;
                     fb->post( fb->m_lastPostedColorBuffer, false );
-
-                    fb->m_width = p_width;
-                    fb->m_height = p_height;
-
                     fb->unbind_locked();
                     success = true;
                 }
-            }
+             }
         }
         s_theFrameBuffer->m_lock.unlock();
-    }
+     }
 
     return success;
 }
@@ -841,9 +820,9 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
             //
             if (m_onPost) {
                 s_gl.glReadPixels(m_x, m_y, m_width, m_height,
-                                  GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
+                		GL_BGRA_EXT, GL_UNSIGNED_BYTE, m_fbImage);
                 m_onPost(m_onPostContext, m_width, m_height, -1,
-                         GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
+                		GL_BGRA_EXT, GL_UNSIGNED_BYTE, m_fbImage);
             }
 
             //
@@ -862,7 +841,7 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
 
             s_egl.eglSwapBuffers(m_eglDisplay, m_eglSurface);
         }
-
+ 
         // restore previous binding
         unbind_locked();
     }
@@ -907,3 +886,4 @@ void FrameBuffer::setViewport(int x0, int y0, int width, int height)
         s_theFrameBuffer-> m_lock.unlock();
     }
 }
+
