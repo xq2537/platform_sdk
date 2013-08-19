@@ -87,7 +87,7 @@ static const char *getGLES2ExtensionString(EGLDisplay p_dpy)
 }
 #endif
 
-void FrameBuffer::finalize(){
+void FrameBuffer::finalize() {
     if(s_theFrameBuffer){
         s_theFrameBuffer->removeSubWindow();
         s_theFrameBuffer->m_colorbuffers.clear();
@@ -841,9 +841,9 @@ bool FrameBuffer::post(HandleType p_colorbuffer, bool needLock)
             //
             if (m_onPost) {
                 s_gl.glReadPixels(m_x, m_y, m_width, m_height,
-                                  GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
+                                  GL_BGRA_EXT/*GL_RGBA*/, GL_UNSIGNED_BYTE, m_fbImage);
                 m_onPost(m_onPostContext, m_width, m_height, -1,
-                         GL_RGBA, GL_UNSIGNED_BYTE, m_fbImage);
+                         GL_BGRA_EXT/*GL_RGBA*/, GL_UNSIGNED_BYTE, m_fbImage);
             }
 
             //
