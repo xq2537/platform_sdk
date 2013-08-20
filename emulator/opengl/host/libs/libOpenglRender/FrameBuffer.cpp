@@ -907,3 +907,24 @@ void FrameBuffer::setViewport(int x0, int y0, int width, int height)
         s_theFrameBuffer-> m_lock.unlock();
     }
 }
+
+bool FrameBuffer::registerOGLCallback(OnPostFn onPost, void* onPostContext)
+{
+    if (s_theFrameBuffer) {
+
+        s_theFrameBuffer->m_lock.lock();
+
+        s_theFrameBuffer->m_onPost = onPost;
+        s_theFrameBuffer->m_onPostContext = onPostContext;
+
+        if(onPost != NULL && s_theFrameBuffer->m_fbImage == NULL) {
+            s_theFrameBuffer->m_fbImage = (unsigned char*)malloc(4 * 2 * 1024 * 1024);
+            if (!s_theFrameBuffer->m_fbImage) {
+                return false;
+            }
+        }
+        s_theFrameBuffer-> m_lock.unlock();
+    }
+
+    return true;
+}

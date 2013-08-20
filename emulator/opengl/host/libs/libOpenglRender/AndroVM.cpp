@@ -19,6 +19,7 @@ extern "C" {
     void AndroVM_setDPI(int);
     void AndroVM_setViewport(int x0, int y0, int width, int height);
     float AndroVM_getDisplayRotation();
+    bool AndroVM_registerOGLCallback(OnPostFn, void*);
 }
 
 int AndroVM_initLibrary()
@@ -91,6 +92,11 @@ void AndroVM_setOpenGLDisplayRotation(float zRot)
 bool AndroVM_initOpenGLRenderer(int width, int height, int portNum, OnPostFn onPost, void* onPostContext)
 {
     return initOpenGLRenderer(width, height, portNum, onPost, onPostContext);
+}
+
+bool AndroVM_registerOGLCallback(OnPostFn onPost, void* onPostContext)
+{
+    return FrameBuffer::registerOGLCallback(onPost, onPostContext);
 }
 
 void AndroVM_setCallbackRotation(void (* fn)(float)) {
