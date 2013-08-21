@@ -338,9 +338,9 @@ bool FrameBuffer::initialize(int width, int height, OnPostFn onPost, void* onPos
     // Allocate space for the onPost framebuffer image
     //
     if (onPost) {
-        //fb->m_fbImage = (unsigned char*)malloc(4 * width * height);
-        fb->m_fbImage = (unsigned char*)malloc(4 * 2 * 1024 * 1024);
+        fb->m_fbImage = (unsigned char*)malloc(4 * width * height);
         if (!fb->m_fbImage) {
+            ERR("Failed to allocate space for onPost framebuffer image\n");
             delete fb;
             return false;
         }
@@ -432,6 +432,19 @@ bool FrameBuffer::setupSubWindow(FBNativeWindowType p_window,
                     fb->m_subWin = NULL;
                 }
                 else if (fb->bindSubwin_locked()) {
+
+                    //
+                    // Increase space for the onPost framebuffer image
+                    //
+                    if (fb->m_fbImage && ((p_width*p_height) > (fb->m_width*fb->m_height))) {
+                        // need more space
+                        fb->m_fbImage = (unsigned char*)realloc(fb->m_fbImage, 4 * p_width * p_height);
+                        if (!fb->m_fbImage) {
+                            ERR("Failed to allocate space for onPost framebuffer image\n");
+                            success = false;
+                        }
+                    }
+
                     // Subwin creation was successfull,
                     // update viewport and z rotation and draw
                     // the last posted color buffer.
@@ -910,6 +923,8 @@ void FrameBuffer::setViewport(int x0, int y0, int width, int height)
 
 bool FrameBuffer::registerOGLCallback(OnPostFn onPost, void* onPostContext)
 {
+    bool success = true;
+
     if (s_theFrameBuffer) {
 
         s_theFrameBuffer->m_lock.lock();
@@ -918,13 +933,14 @@ bool FrameBuffer::registerOGLCallback(OnPostFn onPost, void* onPostContext)
         s_theFrameBuffer->m_onPostContext = onPostContext;
 
         if(onPost != NULL && s_theFrameBuffer->m_fbImage == NULL) {
-            s_theFrameBuffer->m_fbImage = (unsigned char*)malloc(4 * 2 * 1024 * 1024);
+            s_theFrameBuffer->m_fbImage = (unsigned char*)malloc(4 * s_theFrameBuffer->m_width * s_theFrameBuffer->m_height);
             if (!s_theFrameBuffer->m_fbImage) {
-                return false;
+                ERR("Failed to allocate space for onPost framebuffer image\n");
+                success = false;
             }
         }
         s_theFrameBuffer-> m_lock.unlock();
     }
 
-    return true;
+    return success;
 }
